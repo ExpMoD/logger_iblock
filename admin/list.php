@@ -10,6 +10,7 @@ require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_ad
 
 CModule::IncludeModule('logger_iblock');
 CModule::IncludeModule('highloadblock');
+
 use logger_iblock\Options;
 use Bitrix\Highloadblock\HighloadBlockTable as HLBT;
 use Bitrix\Main\Entity;
@@ -28,31 +29,12 @@ if ($POST_RIGHT == "D")
 $ROWS_PER_PAGE = 20;
 
 
-
-
-
 // ID таблицы
 $hlblock_id = Options::getOptionInt(Options::HLB_ID_OPTION);
 
-
 $hlblock = HLBT::getById($hlblock_id)->fetch();
 
-
 $entity = HLBT::compileEntity($hlblock);
-
-
-// Информация по пользовательским полям
-$fields = $GLOBALS['USER_FIELD_MANAGER']->GetUserFields('HLBLOCK_' . $hlblock['ID'], 0, LANGUAGE_ID);
-
-// Сортировка
-$sort_id = 'ID';
-$sort_type = 'DESC';
-if (!empty($_GET['sort_id']) && (isset($fields[$_GET['sort_id']]))) {
-    $sort_id = $_GET['sort_id'];
-}
-if (!empty($_GET['sort_type']) && in_array($_GET['sort_type'], array('ASC', 'DESC'), true)) {
-    $sort_type = $_GET['sort_type'];
-}
 
 
 // Пагинация
@@ -68,13 +50,9 @@ if (isset($ROWS_PER_PAGE) && $ROWS_PER_PAGE > 0) {
 }
 
 
-
-
-
 // Начало запросов
 $mainQuery = new Entity\Query($entity);
 $mainQuery->setSelect(array('*'));
-$mainQuery->setOrder(array($sort_id => $sort_type));
 
 
 // Фильтр
@@ -116,9 +94,9 @@ if ($_GET['FIND_DOC_FROM'] || $_GET['FIND_DOC_TO']) {
             '>=UF_DATE_OF_CHANGE' => $dateFrom->format($format),
             '<=UF_DATE_OF_CHANGE' => $dateTo->format($format),
         );
-    } else if ($dateFromValid && ! $dateToValid) {
+    } else if ($dateFromValid && !$dateToValid) {
         $filter['>=UF_DATE_OF_CHANGE'] = $dateFrom->format($format);
-    } else if (! $dateFromValid && $dateToValid) {
+    } else if (!$dateFromValid && $dateToValid) {
         $filter['<=UF_DATE_OF_CHANGE'] = $dateTo->format($format);
     }
 }
@@ -131,9 +109,6 @@ if (count($filter)) {
     $mainQuery->setFilter($filter);
     $filterIsActive = true;
 }
-
-
-
 
 
 // Пагинация
@@ -153,26 +128,22 @@ $result = $mainQuery->exec();
 $result = new CDBResult($result);
 
 
-
-
-
-
-
 require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_after.php");
 /*** ФИЛЬТР ***/
 ?>
 <script>
-function onSubmitMethod(element) {
-    var form = document.forms[element.name];
-    var elements = form.elements;
-    for (var i = 0; i < form.elements.length; i++) {
-        if (! form.elements[i].value) {
-            form.elements[i].disabled = true;
+    function onSubmitMethod(element) {
+        var form = document.forms[element.name];
+        var elements = form.elements;
+        for (var i = 0; i < form.elements.length; i++) {
+            if (!form.elements[i].value) {
+                form.elements[i].disabled = true;
+            }
         }
     }
-}
 </script>
-<form method="GET" name="find_form" id="FIND_FORM" action="<?=$APPLICATION->GetCurPage()?>" onsubmit="onSubmitMethod(this);">
+<form method="GET" name="find_form" id="FIND_FORM" action="<?= $APPLICATION->GetCurPage() ?>"
+      onsubmit="onSubmitMethod(this);">
     <div class="adm-filter-wrap" style="display: block;">
         <table class="adm-filter-main-table">
             <tbody>
@@ -190,8 +161,8 @@ function onSubmitMethod(element) {
                                                 <span class="adm-select-wrap">
                                                     <select name="FIND_ENTITY_TYPE" class="adm-select">
                                                         <option value="">(любой)</option>
-                                                        <option value="ELEMENT" <?=($_GET['FIND_ENTITY_TYPE'] == 'ELEMENT') ? "selected" : ""?>><?=GetMessage('FIELD_ET_ELEMENT')?></option>
-                                                        <option value="SECTION" <?=($_GET['FIND_ENTITY_TYPE'] == 'SECTION') ? "selected" : ""?>><?=GetMessage('FIELD_ET_SECTION')?></option>
+                                                        <option value="ELEMENT" <?= ($_GET['FIND_ENTITY_TYPE'] == 'ELEMENT') ? "selected" : "" ?>><?= GetMessage('FIELD_ET_ELEMENT') ?></option>
+                                                        <option value="SECTION" <?= ($_GET['FIND_ENTITY_TYPE'] == 'SECTION') ? "selected" : "" ?>><?= GetMessage('FIELD_ET_SECTION') ?></option>
                                                     </select>
                                                 </span>
                                             </div>
@@ -206,7 +177,8 @@ function onSubmitMethod(element) {
                                         <div class="adm-filter-alignment">
                                             <div class="adm-filter-box-sizing">
                                                 <div class="adm-input-wrap">
-                                                    <input type="text" name="FIND_ENTITY_ID" size="10" value="" class="adm-input">
+                                                    <input type="text" name="FIND_ENTITY_ID" size="10" value=""
+                                                           class="adm-input">
                                                 </div>
                                             </div>
                                         </div>
@@ -222,9 +194,9 @@ function onSubmitMethod(element) {
                                                 <span class="adm-select-wrap">
                                                     <select name="FIND_ACTION_TYPE" class="adm-select">
                                                         <option value="">(любой)</option>
-                                                        <option value="EDIT" <?=($_GET['FIND_ACTION_TYPE'] == 'EDIT') ? "selected" : ""?>><?=GetMessage('FIELD_AT_EDIT')?></option>
-                                                        <option value="ADD" <?=($_GET['FIND_ACTION_TYPE'] == 'ADD') ? "selected" : ""?>><?=GetMessage('FIELD_AT_ADD')?></option>
-                                                        <option value="DELETE" <?=($_GET['FIND_ACTION_TYPE'] == 'DELETE') ? "selected" : ""?>><?=GetMessage('FIELD_AT_DELETE')?></option>
+                                                        <option value="EDIT" <?= ($_GET['FIND_ACTION_TYPE'] == 'EDIT') ? "selected" : "" ?>><?= GetMessage('FIELD_AT_EDIT') ?></option>
+                                                        <option value="ADD" <?= ($_GET['FIND_ACTION_TYPE'] == 'ADD') ? "selected" : "" ?>><?= GetMessage('FIELD_AT_ADD') ?></option>
+                                                        <option value="DELETE" <?= ($_GET['FIND_ACTION_TYPE'] == 'DELETE') ? "selected" : "" ?>><?= GetMessage('FIELD_AT_DELETE') ?></option>
                                                     </select>
                                                 </span>
                                             </div>
@@ -238,24 +210,27 @@ function onSubmitMethod(element) {
                                     <td class="adm-filter-item-center">
                                         <div class="adm-calendar-block adm-filter-alignment">
                                             <div class="adm-filter-box-sizing">
-                                                <div class="adm-input-wrap adm-calendar-inp adm-calendar-first" style="display: inline-block;">
+                                                <div class="adm-input-wrap adm-calendar-inp adm-calendar-first"
+                                                     style="display: inline-block;">
                                                     <input type="text"
                                                            class="adm-input adm-calendar-from"
                                                            name="FIND_DOC_FROM"
                                                            size="15"
-                                                           value="<?=$_GET['FIND_DOC_FROM']?>">
+                                                           value="<?= $_GET['FIND_DOC_FROM'] ?>">
                                                     <span class="adm-calendar-icon"
                                                           title="Нажмите для выбора даты"
                                                           onclick="BX.calendar({node:this, field:'FIND_DOC_FROM', form: '', bTime: true, bHideTime: false});">
                                                     </span>
                                                 </div>
-                                                <span class="adm-calendar-separate" style="display: inline-block"></span>
-                                                <div class="adm-input-wrap adm-calendar-second" style="display: inline-block;">
+                                                <span class="adm-calendar-separate"
+                                                      style="display: inline-block"></span>
+                                                <div class="adm-input-wrap adm-calendar-second"
+                                                     style="display: inline-block;">
                                                     <input type="text"
                                                            class="adm-input adm-calendar-to"
                                                            name="FIND_DOC_TO"
                                                            size="15"
-                                                           value="<?=$_GET['FIND_DOC_TO']?>">
+                                                           value="<?= $_GET['FIND_DOC_TO'] ?>">
                                                     <span class="adm-calendar-icon"
                                                           title="Нажмите для выбора даты"
                                                           onclick="BX.calendar({node:this, field:'FIND_DOC_TO', form: '', bTime: true, bHideTime: false});">
@@ -277,7 +252,7 @@ function onSubmitMethod(element) {
                                                            name="FIND_EDITING_USER"
                                                            size="10"
                                                            class="adm-input"
-                                                           value="<?=$_GET['FIND_EDITING_USER']?>">
+                                                           value="<?= $_GET['FIND_EDITING_USER'] ?>">
                                                 </div>
                                             </div>
                                         </div>
@@ -297,7 +272,7 @@ function onSubmitMethod(element) {
                                    value="Найти">
                             <input type="reset" class="adm-btn"
                                    name="del_filter" title="Отменить"
-                                   onclick="document.location.href='<?=$APPLICATION->GetCurPage()?>'"
+                                   onclick="document.location.href='<?= $APPLICATION->GetCurPage() ?>'"
                                    value="Отменить">
                         </div>
                     </div>
@@ -309,36 +284,29 @@ function onSubmitMethod(element) {
 </form>
 
 
-
-
-
-
-
-
-
 <div class="adm-list-table-wrap">
     <table class="adm-list-table">
         <thead>
-            <tr class="adm-list-table-header">
-                <td class="adm-list-table-cell">
-                    <div class="adm-list-table-cell-inner">ID</div>
-                </td>
-                <td class="adm-list-table-cell">
-                    <div class="adm-list-table-cell-inner">Тип сущности</div>
-                </td>
-                <td class="adm-list-table-cell">
-                    <div class="adm-list-table-cell-inner">ID сущности</div>
-                </td>
-                <td class="adm-list-table-cell">
-                    <div class="adm-list-table-cell-inner">Тип действия</div>
-                </td>
-                <td class="adm-list-table-cell">
-                    <div class="adm-list-table-cell-inner">Дата изменения</div>
-                </td>
-                <td class="adm-list-table-cell">
-                    <div class="adm-list-table-cell-inner">Пользователь</div>
-                </td>
-            </tr>
+        <tr class="adm-list-table-header">
+            <td class="adm-list-table-cell">
+                <div class="adm-list-table-cell-inner">ID</div>
+            </td>
+            <td class="adm-list-table-cell">
+                <div class="adm-list-table-cell-inner">Тип сущности</div>
+            </td>
+            <td class="adm-list-table-cell">
+                <div class="adm-list-table-cell-inner">ID сущности</div>
+            </td>
+            <td class="adm-list-table-cell">
+                <div class="adm-list-table-cell-inner">Тип действия</div>
+            </td>
+            <td class="adm-list-table-cell">
+                <div class="adm-list-table-cell-inner">Дата изменения</div>
+            </td>
+            <td class="adm-list-table-cell">
+                <div class="adm-list-table-cell-inner">Пользователь</div>
+            </td>
+        </tr>
         </thead>
 
         <tbody>
@@ -348,24 +316,25 @@ function onSubmitMethod(element) {
             $curUser = "<a href='/bitrix/admin/user_edit.php?lang=ru&ID={$cUser['ID']}'>{$cUser['ID']} ({$cUser['LOGIN']}) {$cUser['LAST_NAME']} {$cUser['NAME']}</a>";
             ?>
 
-            <tr class="adm-list-table-row">
+            <tr class="adm-list-table-row" style="cursor: pointer"
+                onclick="document.location = '<?= Options::module_id . "_detail.php?id=" . $row['ID'] ?>'">
                 <td class="adm-list-table-cell align-center">
-                    <?=$row['ID']?>
+                    <?= $row['ID'] ?>
                 </td>
                 <td class="adm-list-table-cell">
-                    <?=GetMessage('FIELD_ET_' . $row['UF_ENTITY_TYPE'])?>
+                    <?= GetMessage('FIELD_ET_' . $row['UF_ENTITY_TYPE']) ?>
                 </td>
                 <td class="adm-list-table-cell align-center">
-                    <?=$row['UF_ENTITY_ID']?>
+                    <?= $row['UF_ENTITY_ID'] ?>
                 </td>
                 <td class="adm-list-table-cell">
-                    <?=GetMessage('FIELD_AT_' . $row['UF_ACTION_TYPE'])?>
+                    <?= GetMessage('FIELD_AT_' . $row['UF_ACTION_TYPE']) ?>
                 </td>
                 <td class="adm-list-table-cell align-right">
-                    <?=$row['UF_DATE_OF_CHANGE']?>
+                    <?= $row['UF_DATE_OF_CHANGE'] ?>
                 </td>
                 <td class="adm-list-table-cell align-right">
-                    <?=$curUser?>
+                    <?= $curUser ?>
                 </td>
             </tr>
         <? endwhile; ?>
