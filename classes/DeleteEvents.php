@@ -26,11 +26,25 @@ class DeleteEvents
 {
     function onIBlockDeleteElement($ID)
     {
-
+        if (Options::getOptionStr("ENABLED") == 'Y') {
+            \logger_iblock\HLB::add(
+                Options::ENTITY_TYPE_ELEMENT,
+                $ID,
+                Options::ACTION_TYPE_DELETE,
+                array()
+            );
+        }
     }
 
     function onIBlockDeleteSection($ID)
     {
-
+        if (Options::getOptionStr("ENABLED") == 'Y') {
+            \logger_iblock\HLB::add(
+                Options::ENTITY_TYPE_SECTION,
+                $ID,
+                Options::ACTION_TYPE_DELETE,
+                array()
+            );
+        }
     }
 }
