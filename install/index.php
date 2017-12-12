@@ -58,20 +58,34 @@ class logger_iblock extends CModule
         /*** Измениние элементов ***/
         RegisterModuleDependences(
             "iblock",
+            "OnBeforeIBlockElementUpdate",
+            $this->MODULE_ID,
+            "EditEvents",
+            "onIBlockBeforeEditElement"
+        );
+        RegisterModuleDependences(
+            "iblock",
             "OnAfterIBlockElementUpdate",
             $this->MODULE_ID,
             "EditEvents",
-            "onIBlockEditElement"
+            "onIBlockAfterEditElement"
         );
 
 
         /*** Измениние разделов ***/
         RegisterModuleDependences(
             "iblock",
+            "OnBeforeIBlockSectionUpdate",
+            $this->MODULE_ID,
+            "EditEvents",
+            "onIBlockBeforeEditSection"
+        );
+        RegisterModuleDependences(
+            "iblock",
             "OnAfterIBlockSectionUpdate",
             $this->MODULE_ID,
             "EditEvents",
-            "onIBlockEditSection"
+            "onIBlockAfterEditSection"
         );
 
 

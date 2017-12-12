@@ -170,6 +170,9 @@ if ($RIGHT >= "R"):
             $value = $_REQUEST[$name];
 
             if (is_array($value)) {
+                if (in_array('nothing', $value))
+                    $value = ['nothing'];
+
                 $value = implode(';;;', $value);
             } else if (!isset($value)) {
                 $value = "";

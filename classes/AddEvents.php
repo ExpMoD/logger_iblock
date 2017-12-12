@@ -22,6 +22,9 @@
 
 class AddEvents
 {
+    const ib = "iblock";
+    const module_id = "logger_iblock";
+
     function onIBlockAddElement(&$arFields)
     {
 

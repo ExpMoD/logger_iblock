@@ -22,6 +22,9 @@
 
 class DeleteEvents
 {
+    const ib = "iblock";
+    const module_id = "logger_iblock";
+
     function onIBlockDeleteElement($ID)
     {
 

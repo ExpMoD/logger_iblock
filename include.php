@@ -3,9 +3,9 @@ CModule::IncludeModule("logger_iblock");
 
 
 $arClasses = array(
-    'AddEvents' => 'classes/iblocks/AddEvents.php',
-    'EditEvents' => 'classes/iblocks/EditEvents.php',
-    'DeleteEvents' => 'classes/iblocks/DeleteEvents.php',
+    'AddEvents' => 'classes/AddEvents.php',
+    'EditEvents' => 'classes/EditEvents.php',
+    'DeleteEvents' => 'classes/DeleteEvents.php',
 );
 
 CModule::AddAutoloadClasses("logger_iblock", $arClasses);
