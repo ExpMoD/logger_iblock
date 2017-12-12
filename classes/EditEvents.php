@@ -20,21 +20,17 @@
  * -- Логируемые свойства разделов ИБ: iblock.SECTIONPROPS.#IBlockId#
  */
 
-$global_value = "";
-
-
+use logger_iblock\Options;
 
 class EditEvents
 {
-    const ib = "iblock";
-    const module_id = "logger_iblock";
-    const ses_var = "IBLOCK_LOGGER_ELEMENT";
+    const ACTION_TYPE = "Изменение";
 
     function onIBlockBeforeEditElement(&$arFields)
     {
         $iBlockIncluded = CModule::IncludeModule('iblock');
 
-        if (self::getOption("main.ENABLED") == 'Y' && $iBlockIncluded) {
+        if (Options::getOptionStr("ENABLED") == 'Y' && $iBlockIncluded) {
             $arElement = CIBlockElement::GetList(
                 array(),
                 array('IBLOCK_ID' => $arFields['IBLOCK_ID'], 'ID' => $arFields['ID'])
@@ -43,7 +39,7 @@ class EditEvents
             $oldElement['FIELDS'] = $arElement->GetFields();
             $oldElement['PROPERTIES'] = $arElement->GetProperties();
 
-            $_SESSION[self::ses_var] = $oldElement;
+            $_SESSION[Options::ses_var] = $oldElement;
         }
     }
 
@@ -51,11 +47,11 @@ class EditEvents
     {
         $iBlockIncluded = CModule::IncludeModule('iblock');
 
-        if (self::getOption("main.ENABLED") == 'Y' && $iBlockIncluded) {
-            $oldElement = $_SESSION[self::ses_var];
-            unset($_SESSION[self::ses_var]);
+        if (Options::getOptionStr("ENABLED") == 'Y' && $iBlockIncluded) {
+            $oldElement = $_SESSION[Options::ses_var];
+            unset($_SESSION[Options::ses_var]);
 
-            //if (! is_array($oldElement['FIELDS']) && ! is_array($oldElement['PROPERTIES'])) return;
+            if (! is_array($oldElement['FIELDS']) && ! is_array($oldElement['PROPERTIES'])) return;
 
             $arElement = CIBlockElement::GetList(
                 array(),
@@ -69,40 +65,39 @@ class EditEvents
             $IBLOCK_ID = $newElement['FIELDS']['IBLOCK_ID'];
 
             global $APPLICATION;
-            $ibActive = self::getOption(self::ib . ".ACTIVE." . $IBLOCK_ID);
-            $ibElFields = self::getOption(self::ib . ".ELEMENTFIELDS." . $IBLOCK_ID);
-            $ibElProps = self::getOption(self::ib . ".ELEMENTPROPS." . $IBLOCK_ID);
-            $ibSecFields = self::getOption(self::ib . ".SECTIONFIELDS." . $IBLOCK_ID);
-            $ibSecProps = self::getOption(self::ib . ".SECTIONPROPS." . $IBLOCK_ID);
-
+            $ibActive = Options::getOptionStr(Options::ib . ".ACTIVE." . $IBLOCK_ID);
+            $ibElFields = Options::getOptionStr(Options::ib . ".ELEMENTFIELDS." . $IBLOCK_ID);
+            $ibElProps = Options::getOptionStr(Options::ib . ".ELEMENTPROPS." . $IBLOCK_ID);
 
             if ($ibActive == 'Y') {
                 if (strlen($ibElFields))  $ibElFields  = explode(';;;', $ibElFields);
                 if (strlen($ibElProps))   $ibElProps   = explode(';;;', $ibElProps);
-                if (strlen($ibSecFields)) $ibSecFields = explode(';;;', $ibSecFields);
-                if (strlen($ibSecProps))  $ibSecProps  = explode(';;;', $ibSecProps);
 
-                $changed = array();
+                $changedTemp = array();
 
 
                 if (! in_array('nothing', $ibElFields)) {
                     foreach ($oldElement['FIELDS'] as $key => $oldValue) {
+                        if (substr($key, 0, 1) == '~') continue;
+
                         $newValue = $newElement['FIELDS'][$key];
 
                         if (is_array($newValue))
                             $newValue = implode('; ', $newValue);
                         if (is_array($oldValue))
                             $oldValue = implode('; ', $oldValue);
-
-                        if ($oldValue != $newValue && substr($key, 0, 1) != '~') {
-                            if (in_array($key, $ibElFields) || ! $ibElProps)
-                                $changed['FIELDS'][$key] = $oldValue . ">>>>" . $newValue;
+                        if ($oldValue != $newValue) {
+                            if (in_array($key, $ibElFields) || ! $ibElFields)
+                                $changedTemp['FIELDS'][$key] = $oldValue . " > " . $newValue;
                         }
+
                     }
                 }
 
                 if (! in_array('nothing', $ibElProps)) {
                     foreach ($oldElement['PROPERTIES'] as $key => $oldValue) {
+                        if (substr($key, 0, 1) == '~') continue;
+
                         $newValue = $newElement['PROPERTIES'][$key]['VALUE'];
                         $oldValue = $oldValue['VALUE'];
 
@@ -111,14 +106,25 @@ class EditEvents
                         if (is_array($oldValue))
                             $oldValue = implode('; ', $oldValue);
 
-                        if ($oldValue != $newValue && substr($key, 0, 1) != '~') {
+                        if ($oldValue != $newValue) {
                             if (in_array($key, $ibElProps) || ! $ibElProps)
-                                $changed['PROPERTIES'][$key] = $oldValue . ">>>>" . $newValue;
+                                $changedTemp['PROPERTIES'][$key] = $oldValue . " > " . $newValue;
                         }
                     }
                 }
 
-                AddMessage2Log(mydump($changed));
+                $changed = array();
+
+                foreach ($changedTemp['FIELDS'] as $key => $value) {
+                    $changed[] = $key . ": " . $value;
+                }
+
+                foreach ($changedTemp['PROPERTIES'] as $key => $value) {
+                    $changed[] = $key . ": " . $value;
+                }
+
+                if (!! count($changed))
+                    \logger_iblock\HLB::add("Элемент", $IBLOCK_ID, self::ACTION_TYPE, $changed);
             }
         }
     }
@@ -128,20 +134,88 @@ class EditEvents
 
     function onIBlockBeforeEditSection(&$arFields)
     {
+        $iBlockIncluded = CModule::IncludeModule('iblock');
 
+        if (Options::getOptionStr("ENABLED") == 'Y' && $iBlockIncluded) {
+            $arElement = CIBlockSection::GetList(
+                array(),
+                array('IBLOCK_ID' => $arFields['IBLOCK_ID'], 'ID' => $arFields['ID']),
+                false,
+                array('*', 'UF_*')
+            )->Fetch();
+            $oldElement = array();
+            $oldElement['FIELDS'] = $arElement;
+
+            $_SESSION[Options::ses_var] = $oldElement;
+        }
     }
 
 
     function onIBlockAfterEditSection(&$arFields)
-    {
+    {$iBlockIncluded = CModule::IncludeModule('iblock');
 
-    }
+        if (Options::getOptionStr("ENABLED") == 'Y' && $iBlockIncluded) {
+            $oldElement = $_SESSION[Options::ses_var];
+            unset($_SESSION[Options::ses_var]);
+
+            if (! is_array($oldElement['FIELDS']) && ! is_array($oldElement['PROPERTIES'])) return;
+
+            $arElement = CIBlockSection::GetList(
+                array(),
+                array('IBLOCK_ID' => $arFields['IBLOCK_ID'], 'ID' => $arFields['ID']),
+                false,
+                array('*', 'UF_*')
+            )->Fetch();
+            $newElement = array();
+            $newElement['FIELDS'] = $arElement;
 
 
+            $IBLOCK_ID = $newElement['FIELDS']['IBLOCK_ID'];
 
-    function getOption($name)
-    {
-        return COption::GetOptionString(self::module_id, $name);
+            global $APPLICATION;
+            $ibActive = Options::getOptionStr(Options::ib . ".ACTIVE." . $IBLOCK_ID);
+            $ibElFields = Options::getOptionStr(Options::ib . ".SECTIONFIELDS." . $IBLOCK_ID);
+            $ibElProps = Options::getOptionStr(Options::ib . ".SECTIONPROPS." . $IBLOCK_ID);
+
+            if ($ibActive == 'Y') {
+                if (strlen($ibElFields))  $ibElFields  = explode(';;;', $ibElFields);
+                if (strlen($ibElProps))   $ibElProps   = explode(';;;', $ibElProps);
+
+
+                //array_merge($ibElFields, $ib)
+
+                $changedTemp = array();
+
+
+                if (! in_array('nothing', $ibElFields)) {
+                    foreach ($oldElement['FIELDS'] as $key => $oldValue) {
+                        if (substr($key, 0, 1) == '~') continue;
+
+                        $newValue = $newElement['FIELDS'][$key];
+
+                        if (is_array($newValue))
+                            $newValue = implode('; ', $newValue);
+                        if (is_array($oldValue))
+                            $oldValue = implode('; ', $oldValue);
+                        if ($oldValue != $newValue) {
+                            if (in_array($key, $ibElFields) || ! $ibElFields)
+                                $changedTemp['FIELDS'][$key] = $oldValue . " > " . $newValue;
+                        }
+
+                    }
+                }
+
+                $changed = array();
+
+                foreach ($changedTemp['FIELDS'] as $key => $value) {
+                    $changed[] = $key . ": " . $value;
+                }
+
+                AddMessage2Log(mydump($changed));
+                /*if (!! count($changed))
+                    \logger_iblock\HLB::add("Элемент", $IBLOCK_ID, self::ACTION_TYPE, $changed);*/
+            }
+        }
     }
 }
 

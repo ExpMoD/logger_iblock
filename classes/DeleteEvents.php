@@ -20,11 +20,10 @@
  * -- Логируемые свойства разделов ИБ: iblock.SECTIONPROPS.#IBlockId#
  */
 
+use logger_iblock\Options;
+
 class DeleteEvents
 {
-    const ib = "iblock";
-    const module_id = "logger_iblock";
-
     function onIBlockDeleteElement($ID)
     {
 

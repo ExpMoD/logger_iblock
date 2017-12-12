@@ -1,12 +1,15 @@
 <h1>Настройка модуля</h1>
 
 <?
-$module_id = "logger_iblock";
+
+CModule::IncludeModule("logger_iblock");
+
+use logger_iblock\Options;
 
 IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"] . BX_ROOT . "/modules/main/options.php");
 IncludeModuleLangFile(__FILE__);
 
-$RIGHT = $APPLICATION->GetGroupRight($module_id);
+$RIGHT = $APPLICATION->GetGroupRight(Options::module_id);
 
 
 if ($RIGHT >= "R"):
@@ -52,7 +55,7 @@ if ($RIGHT >= "R"):
     $arMainOptions = array(
         GetMessage("MAIN_OPTIONS"),
         array(
-            "ID" => "main.ENABLED",
+            "ID" => "ENABLED",
             "NAME" => GetMessage("LIB_OPTIONS_ENABLED"),
             "TYPE" => "checkbox",
             "SIZE" => false,
@@ -71,19 +74,19 @@ if ($RIGHT >= "R"):
             $arIBlockOptions[] = $iblock['NAME'];
 
             /*** Добавление настройки включения логирования инфоблока ***/
-            $opActive = array();
-            $opActive['ID'] = "iblock.ACTIVE." . $iblock['ID'];
-            $opActive['NAME'] = GetMessage('LIB_OPTIONS_ENABLED');
-            $opActive['TYPE'] = "checkbox";
-            $opActive['DEFAULT'] = false;
-            $opActive['ACTIVE'] = true;
-            $arIBlockOptions[] = $opActive;
+            $arIBlockOptions[] = $opActive = array(
+                'ID' => Options::ib . ".ACTIVE." . $iblock['ID'],
+                'NAME' => GetMessage('LIB_OPTIONS_ENABLED'),
+                'TYPE' => "checkbox",
+                'DEFAULT' => "",
+                'ACTIVE' => true
+            );
 
 
             /*** Получение полей элементов в инфоблоке и добавление одноименной настройки ***/
             $arElFields = CIBlockParameters::GetFieldCode(GetMessage("IBLOCK_FIELD"), "LIST_SETTINGS")['VALUES'];
             $arIBlockOptions[] = $opElFields = array(
-                'ID' => "iblock.ELEMENTFIELDS." . $iblock['ID'],
+                'ID' => Options::ib . ".ELEMENTFIELDS." . $iblock['ID'],
                 'NAME' => "Поля элементов",
                 'TYPE' => "multiselect",
                 'SIZE' => 10,
@@ -104,7 +107,7 @@ if ($RIGHT >= "R"):
                     $arElProperties[$arr["CODE"]] = "[" . $arr["CODE"] . "] " . $arr["NAME"];
             }
             $arIBlockOptions[] = $opElProps = array(
-                'ID' => "iblock.ELEMENTPROPS." . $iblock['ID'],
+                'ID' => Options::ib . ".ELEMENTPROPS." . $iblock['ID'],
                 'NAME' => "Свойства элементов",
                 'TYPE' => "multiselect",
                 'SIZE' => 4,
@@ -118,7 +121,7 @@ if ($RIGHT >= "R"):
             $arSecFields = array();
             $arSecFields = CIBlockParameters::GetSectionFieldCode(GetMessage("IBLOCK_FIELD"), "LIST_SETTINGS")['VALUES'];
             $arIBlockOptions[] = $opSecFields = array(
-                'ID' => "iblock.SECTIONFIELDS." . $iblock['ID'],
+                'ID' => Options::ib . ".SECTIONFIELDS." . $iblock['ID'],
                 'NAME' => "Поля разделов",
                 'TYPE' => "multiselect",
                 'SIZE' => 10,
@@ -134,7 +137,7 @@ if ($RIGHT >= "R"):
                 $arSecProperties[$key] = $key;
             }
             $arIBlockOptions[] = $opSecProps = array(
-                'ID' => "iblock.SECTIONPROPS." . $iblock['ID'],
+                'ID' => Options::ib . ".SECTIONPROPS." . $iblock['ID'],
                 'NAME' => "Свойства разделов",
                 'TYPE' => "multiselect",
                 'SIZE' => 4,
@@ -149,7 +152,6 @@ if ($RIGHT >= "R"):
 
     $tabControl = new CAdminTabControl("tabControl", $arTabs);
 
-    CModule::IncludeModule($module_id);
 
     /*** Сохранение настроек ***/
     if ($REQUEST_METHOD == "POST" && strlen($Update . $Apply . $RestoreDefaults) > 0 && $RIGHT == "W" && check_bitrix_sessid()) {
@@ -160,7 +162,7 @@ if ($RIGHT >= "R"):
             $id = htmlspecialcharsbx($arOption['ID']);
             $name = str_replace('.', '_', $id);
             $value = (isset($_REQUEST[$name])) ? $_REQUEST[$name] : "";
-            COption::SetOptionString($module_id, $id, $value);
+            Options::setOptionStr($id, $value);
         }
 
         /*** Запись измененных свойств элемента раздела инфоблоки ***/
@@ -178,7 +180,7 @@ if ($RIGHT >= "R"):
                 $value = "";
             }
 
-            COption::SetOptionString($module_id, $id, $value);
+            Options::setOptionStr($id, $value);
         }
 
         ob_start();
@@ -194,7 +196,7 @@ if ($RIGHT >= "R"):
     ?>
     <form
             method="post"
-            action="<? echo $APPLICATION->GetCurPage() ?>?mid=<?= urlencode($module_id) ?>&amp;lang=<?= LANGUAGE_ID ?>">
+            action="<? echo $APPLICATION->GetCurPage() ?>?mid=<?= urlencode(Options::module_id) ?>&amp;lang=<?= LANGUAGE_ID ?>">
         <?
         $tabControl->Begin(); ?>
 
@@ -205,7 +207,7 @@ if ($RIGHT >= "R"):
             if (is_array($arOption)):
                 $id = $arOption['ID'];
                 $type = $arOption['TYPE'];
-                $val = COption::GetOptionString($module_id, $arOption['ID'], $arOption['DEFAULT']);
+                $val = COption::GetOptionString(Options::module_id, $arOption['ID'], $arOption['DEFAULT']);
                 ?>
                 <? if ($arOption['ACTIVE']): ?>
                 <tr>
@@ -253,7 +255,7 @@ if ($RIGHT >= "R"):
                     <?
                     $id = $arOption['ID'];
                     $type = $arOption['TYPE'];
-                    $val = COption::GetOptionString($module_id, $id, $arOption['DEFAULT']);
+                    $val = COption::GetOptionString(Options::module_id, $id, $arOption['DEFAULT']);
                     ?>
 
                     <? if ($arOption['ACTIVE']): ?>

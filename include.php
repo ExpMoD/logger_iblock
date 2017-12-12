@@ -1,5 +1,12 @@
 <?php
-CModule::IncludeModule("logger_iblock");
+
+Bitrix\Main\Loader::registerAutoloadClasses(
+    "logger_iblock",
+    array(
+        "logger_iblock\\HLB" => "lib/HLB.php",
+        "logger_iblock\\Options" => "lib/Options.php",
+    )
+);
 
 
 $arClasses = array(
@@ -9,3 +16,8 @@ $arClasses = array(
 );
 
 CModule::AddAutoloadClasses("logger_iblock", $arClasses);
+
+
+
+
+CModule::IncludeModule("logger_iblock");
