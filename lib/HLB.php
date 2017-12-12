@@ -97,6 +97,14 @@ class HLB
         }
     }
 
+    public static function isExist()
+    {
+        $HLB_ID = Options::getOptionInt(Options::HLB_ID_OPTION);
+
+        return (count(HLBT::getById($HLB_ID)->fetch()) > 1);
+    }
+
+
     public static function getEntityDataClass($HlBlockId)
     {
         if (empty($HlBlockId) || $HlBlockId < 1) {

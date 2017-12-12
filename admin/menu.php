@@ -8,10 +8,14 @@
 
 IncludeModuleLangFile(__FILE__);
 
-global $APPLICATION;
-$MODULE_ID = "logger_iblock";
+CModule::IncludeModule('logger_iblock');
 
-if ($APPLICATION->GetGroupRight("form") > "D") {
+global $APPLICATION;
+$MODULE_ID = \logger_iblock\Options::module_id;
+
+
+
+if ($APPLICATION->GetGroupRight("form") > "D" && \logger_iblock\HLB::isExist()) {
     // сформируем верхний пункт меню
     $aMenu = array(
         "parent_menu" => "global_menu_services",

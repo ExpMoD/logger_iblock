@@ -51,8 +51,8 @@ require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_ad
 ?>
 
 <?
-$element = $result->Fetch();
-if (count($element)):
+if ($result->SelectedRowsCount() > 0):
+    $element = $result->Fetch();
     ?>
     <div class="adm-detail-toolbar">
         <a href="<?= Options::module_id . "_list.php?lang=" . LANGUAGE_ID ?>" class="adm-detail-toolbar-btn"
@@ -142,6 +142,8 @@ if (count($element)):
             <div style="height: 14px;"></div>
         </div>
     </div>
+<? else: ?>
+    Данной записи не найдено!
 <? endif; ?>
 
 
