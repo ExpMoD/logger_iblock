@@ -26,11 +26,31 @@ class AddEvents
 {
     function onIBlockAddElement(&$arFields)
     {
-
+        if (Options::getOptionStr("ENABLED") == 'Y') {
+            $ibActive = Options::getOptionStr(Options::ib . ".ACTIVE." . $arFields['IBLOCK_ID']);
+            if ($ibActive == 'Y') {
+                \logger_iblock\HLB::add(
+                    Options::ENTITY_TYPE_ELEMENT,
+                    $arFields['ID'],
+                    Options::ACTION_TYPE_ADD,
+                    array()
+                );
+            }
+        }
     }
 
     function onIBlockAddSection(&$arFields)
     {
-
+        if (Options::getOptionStr("ENABLED") == 'Y') {
+            $ibActive = Options::getOptionStr(Options::ib . ".ACTIVE." . $arFields['IBLOCK_ID']);
+            if ($ibActive == 'Y') {
+                \logger_iblock\HLB::add(
+                    Options::ENTITY_TYPE_SECTION,
+                    $arFields['ID'],
+                    Options::ACTION_TYPE_ADD,
+                    array()
+                );
+            }
+        }
     }
 }
