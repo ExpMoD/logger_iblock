@@ -119,6 +119,7 @@ class HLB
 
             foreach (Options::UF_NAMES as $UF) {
                 $key = "UF_" . $UF['NAME'];
+
                 switch ($UF['LOCAL_ID']) {
                     case 1:
                         $blockData[$key] = $entityType;
@@ -134,7 +135,7 @@ class HLB
                         $blockData[$key] = $dataTime->toString();
                         break;
                     case 5:
-                        $blockData[$key] = $USER->GetID() . " (" . $USER->GetLogin() . ") " . $USER->GetFullName();
+                        $blockData[$key] = $USER->GetID();
                         break;
                     case 6:
                         $blockData[$key] = $data;
@@ -147,4 +148,5 @@ class HLB
             return false;
         }
     }
+
 }

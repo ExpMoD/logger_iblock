@@ -16,13 +16,17 @@ class logger_iblock extends CModule
     // пути
     var $PATH;
     var $PATH_INSTALL;
+    var $PATH_ADMIN;
 
     function logger_iblock()
     {
         $arModuleVersion = array();
 
-        $this->PATH = $_SERVER['DOCUMENT_ROOT'] . "/$this->MODULE_MODE_EXEC/modules/$this->MODULE_ID";
-        $this->PATH_INSTALL = "$this->PATH/install";
+        $this->PATH = $_SERVER['DOCUMENT_ROOT'] . getLocalPath("modules/$this->MODULE_ID");
+
+        $this->PATH = dirname(dirname(__FILE__));
+        $this->PATH_INSTALL = $this->PATH . "/install";
+        $this->PATH_ADMIN = $this->PATH . "/admin";
         include($this->PATH_INSTALL . "/version.php");
 
         if (is_array($arModuleVersion) && array_key_exists("VERSION", $arModuleVersion)) {
@@ -171,10 +175,40 @@ class logger_iblock extends CModule
         );
     }
 
+    function InstallFiles()
+    {
+        if (is_dir($this->PATH_ADMIN)) {
+            AddMessage2Log("OKEY");
+            if ($dir = opendir($this->PATH_ADMIN)) {
+                while (false !== $item = readdir($dir)) {
+                    if ($item == '..' || $item == '.' || $item == 'menu.php')
+                        continue;
+                    file_put_contents($file = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/admin/' . $this->MODULE_ID . '_' . $item,
+                        '<' . '? require("' . $this->PATH_ADMIN . '/' . $item . '");?' . '>');
+                }
+                closedir($dir);
+            }
+        }
+    }
+
+    function UnInstallFiles()
+    {
+        if (is_dir($this->PATH_ADMIN)) {
+            if ($dir = opendir($this->PATH_ADMIN)) {
+                while (false !== $item = readdir($dir)) {
+                    if ($item == '..' || $item == '.')
+                        continue;
+                    unlink($_SERVER['DOCUMENT_ROOT'] . '/bitrix/admin/' . $this->MODULE_ID . '_' . $item);
+                }
+                closedir($dir);
+            }
+        }
+    }
 
     function DoInstall()
     {
         global $DOCUMENT_ROOT, $APPLICATION;
+        $this->InstallFiles();
         $this->RegisterEvents();
         RegisterModule($this->MODULE_ID);
         return true;
@@ -183,6 +217,7 @@ class logger_iblock extends CModule
     function DoUninstall()
     {
         global $DOCUMENT_ROOT, $APPLICATION;
+        $this->UnInstallFiles();
         $this->UnRegisterEvents();
         UnRegisterModule($this->MODULE_ID);
         return true;

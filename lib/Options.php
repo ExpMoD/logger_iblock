@@ -99,4 +99,23 @@ class Options
     {
         return \COption::SetOptionString(self::module_id, $name, $value);
     }
+
+
+
+    public static function getUFNamesByLocalId($ID)
+    {
+        foreach (self::UF_NAMES as $UF) {
+            if ($UF['LOCAL_ID'] == $ID) {
+                return $UF;
+            }
+        }
+
+        return false;
+    }
+
+
+    public static function isValidDateTimeString($str_dt, $str_dateformat = 'd.m.Y H:i:s') {
+        $date = \DateTime::createFromFormat($str_dateformat, $str_dt);
+        return $date && \DateTime::getLastErrors()["warning_count"] == 0 && \DateTime::getLastErrors()["error_count"] == 0;
+    }
 }
