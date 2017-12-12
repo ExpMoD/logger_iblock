@@ -15,6 +15,13 @@ class Options
     const module_id = "logger_iblock";
     const ses_var = "IBLOCK_LOGGER_ELEMENT";
 
+    const ACTION_TYPE_EDIT = "EDIT";
+    const ACTION_TYPE_ADD = "ADD";
+    const ACTION_TYPE_DELETE = "DELETE";
+
+    const ENTITY_TYPE_ELEMENT = "ELEMENT";
+    const ENTITY_TYPE_SECTION = "SECTION";
+
     const HLB_ID_OPTION = "HLB.ID";
     const UF_NAMES = array(
         array(

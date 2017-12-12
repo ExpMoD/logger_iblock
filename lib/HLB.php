@@ -148,13 +148,6 @@ class HLB
         }
     }
 
-    public static function joy()
-    {
-        global $USER;
-
-        AddMessage2Log("USER " . $USER->GetID());
-    }
-
     public static function push()
     {
 
@@ -169,5 +162,60 @@ class HLB
                 $UF['SETTINGS']
             );
         }
+    }
+
+    public static function joy()
+    {
+        /*$name = "ENUM";
+        $HLB_ID = 6;
+        $type = "enumeration";
+        $sort = 499;
+        $multiple = false;
+        $mandatory = false;
+        $settings = array();
+        $ruLabel = "Список";
+
+
+        $userTypeEntity = new \CUserTypeEntity();
+
+        $UFname = "UF_$name";
+
+        $userTypeData = array(
+            'ENTITY_ID' => 'HLBLOCK_' . $HLB_ID,
+            'FIELD_NAME' => $UFname,
+            'USER_TYPE_ID' => $type,
+            'XML_ID' => 'XML_ID_' . $name,
+            'SORT' => $sort,
+            'MULTIPLE' => ($multiple) ? "Y" : "N",
+            'MANDATORY' => ($mandatory) ? "Y" : "N",
+            'SHOW_FILTER' => 'Y',
+            'SHOW_IN_LIST' => '',
+            'EDIT_IN_LIST' => '',
+            'IS_SEARCHABLE' => 'N',
+            'SETTINGS' => $settings,
+            'EDIT_FORM_LABEL' => array(
+                'ru' => $ruLabel,
+            ),
+            'LIST_COLUMN_LABEL' => array(
+                'ru' => $ruLabel,
+            ),
+            'LIST_FILTER_LABEL' => array(
+                'ru' => $ruLabel,
+            ),
+            'ERROR_MESSAGE' => array(
+                'ru' => 'Ошибка при заполнении пользовательского свойства <Названия свойства>',
+                'en' => 'An error in completing the user field <Property name>',
+            ),
+            'HELP_MESSAGE' => array(
+                'ru' => '',
+                'en' => '',
+            ),
+        );
+
+        $userTypeId = $userTypeEntity->Add($userTypeData);
+        $userTypeEntity->Update($userTypeId, array('LIST' => array(
+            'n0' => array('VALUE' => 'Первое'),
+            'n1' => array('VALUE' => 'Второе'),
+        )));*/
     }
 }
