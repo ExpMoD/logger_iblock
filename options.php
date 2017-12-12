@@ -44,7 +44,8 @@ if ($RIGHT >= "R"):
             "NAME" => GetMessage("LIB_OPTIONS_ENABLED"),
             "TYPE" => "checkbox",
             "SIZE" => false,
-            "DEFAULT" => "Y"),
+            "DEFAULT" => "Y",
+            "ACTIVE" => true),
     );
 
     $arIBlockOptions = array();
@@ -55,44 +56,78 @@ if ($RIGHT >= "R"):
         while ($iblock = $arIBlocks->GetNext()) {
             $arIBlockOptions[] = $iblock['NAME'] /*. " ({$iblock['CODE']})"*/;
 
+            /*** Добавление настройки включения логирования инфоблока ***/
             $opActive = array();
             $opActive['ID'] = "iblock.ACTIVE." . $iblock['ID'];
             $opActive['NAME'] = GetMessage('LIB_OPTIONS_ENABLED');
             $opActive['TYPE'] = "checkbox";
             $opActive['DEFAULT'] = false;
+            $opActive['ACTIVE'] = true;
             $arIBlockOptions[] = $opActive;
 
 
+            /*** Получение полей элементов в инфоблоке и добавление одноименной настройки ***/
             $arElFields = CIBlockParameters::GetFieldCode(GetMessage("IBLOCK_FIELD"), "LIST_SETTINGS")['VALUES'];
-            $opElFields = array();
-            $opElFields['ID'] = "iblock.ELEMENTFIELDS." . $iblock['ID'];
-            $opElFields['NAME'] = "Поля элементов";
-            $opElFields['TYPE'] = "multiselect";
-            $opElFields['SIZE'] = 10;
-            $opElFields['DEFAULT'] = "";
-            $opElFields['VALUES'] = $arElFields;
-            $arIBlockOptions[] = $opElFields;
-            print_r($opElFields['DEFAULT']);
+            $arIBlockOptions[] = $opElFields = array(
+                'ID' => "iblock.ELEMENTFIELDS." . $iblock['ID'],
+                'NAME' => "Поля элементов",
+                'TYPE' => "multiselect",
+                'SIZE' => 10,
+                'DEFAULT' => "",
+                'VALUES' => $arElFields,
+                'ACTIVE' => (!! count($arElFields))
+            );
 
+
+            /*** Получение свойств элементов в инфоблоке и добавление одноименной настройки ***/
             $arElProperties = array();
             $rsProp = CIBlockProperty::GetList(
                 Array("sort" => "asc", "name" => "asc"),
                 Array("ACTIVE" => "Y", "IBLOCK_ID" => $iblock["ID"])
             );
             while ($arr = $rsProp->Fetch()) {
-                if (in_array($arr["PROPERTY_TYPE"], array("L", "N", "S", "E"))) {
+                if (in_array($arr["PROPERTY_TYPE"], array("L", "N", "S", "E")))
                     $arElProperties[$arr["CODE"]] = "[".$arr["CODE"]."] ".$arr["NAME"];
-                }
             }
+            $arIBlockOptions[] = $opElProps = array(
+                'ID' => "iblock.ELEMENTPROPS." . $iblock['ID'],
+                'NAME' => "Свойства элементов",
+                'TYPE' => "multiselect",
+                'SIZE' => 4,
+                'DEFAULT' => "",
+                'VALUES' => $arElProperties,
+                'ACTIVE' => (!! count($arElProperties))
+            );
 
+
+            /*** Получение всех полей разделов в инфоблоке и добавление одноименной настройки ***/
             $arSecFields = array();
+            $arSecFields = CIBlockParameters::GetSectionFieldCode(GetMessage("IBLOCK_FIELD"), "LIST_SETTINGS")['VALUES'];
+            $arIBlockOptions[] = $opSecFields = array(
+                'ID' => "iblock.SECTIONFIELDS." . $iblock['ID'],
+                'NAME' => "Поля разделов",
+                'TYPE' => "multiselect",
+                'SIZE' => 10,
+                'DEFAULT' => "",
+                'VALUES' => $arSecFields,
+                'ACTIVE' => (!! count($arSecFields))
+            );
 
+
+            /*** Получение пользовательских полей разделов в инфоблоке и добавление одноименной настройки ***/
             $arSecProperties = array();
             foreach ($USER_FIELD_MANAGER->GetUserFields("IBLOCK_".$iblock["ID"]."_SECTION") as $key => $value) {
                 $arSecProperties[$key] = $key;
             }
-
-            //\Bitrix\Main\Diag\Debug::dump($arSecProperties);
+            $arIBlockOptions[] = $opSecProps = array(
+                'ID' => "iblock.SECTIONPROPS." . $iblock['ID'],
+                'NAME' => "Свойства разделов",
+                'TYPE' => "multiselect",
+                'SIZE' => 4,
+                'DEFAULT' => "",
+                'VALUES' => $arSecProperties,
+                'ACTIVE' => (!! count($arSecProperties))
+            );
         }
 
     }
@@ -125,10 +160,10 @@ if ($RIGHT >= "R"):
         method="post"
         action="<?echo $APPLICATION->GetCurPage()?>?mid=<?=urlencode($module_id)?>&amp;lang=<?=LANGUAGE_ID?>">
         <?
-        $tabControl->Begin();
+        $tabControl->Begin();?>
 
-        /*** MAIN ***/
-        $tabControl->BeginNextTab();
+        <!-- Вкладка с основными настройками -->
+        <? $tabControl->BeginNextTab();
         $tab = "main";
 
         foreach($arMainOptions as $arOption):
@@ -137,6 +172,7 @@ if ($RIGHT >= "R"):
                 $type = $arOption['TYPE'];
                 $id = $tab . "." . $arOption['ID'];
                 ?>
+                <? if ($arOption['ACTIVE']): ?>
                 <tr>
                     <td width="40%" nowrap <?=($type == "textarea") ? 'class="adm-detail-valign-top"' : ""?>>
                         <label for="<?=htmlspecialcharsbx($id)?>"><?= $arOption['NAME']?>:</label>
@@ -163,6 +199,7 @@ if ($RIGHT >= "R"):
                         <? endif; ?>
                     </td>
                 </tr>
+                <? endif; ?>
             <? else: ?>
                 <tr class="heading">
                     <td colspan="2"><?=$arOption?></td>
@@ -171,7 +208,7 @@ if ($RIGHT >= "R"):
         <? endforeach; ?>
 
 
-        <!--Вкладка с инфоблоками-->
+        <!-- Вкладка с инфоблоками -->
         <? if ($iBlockIncluded): ?>
             <?
                 $tabControl->BeginNextTab();
@@ -184,35 +221,34 @@ if ($RIGHT >= "R"):
                         $type = $arOption['TYPE'];
                         $val = COption::GetOptionString($module_id, $id, $arOption['DEFAULT']);
                     ?>
+
+                    <? if ($arOption['ACTIVE']): ?>
                     <tr>
                         <td width="40%" nowrap <?=($type == "textarea") ? 'class="adm-detail-valign-top"' : ""?>>
                             <label for="<?=htmlspecialcharsbx($id)?>"><?=$arOption['NAME']?>:</label>
                         </td>
                         <td width="60%">
                             <? if($type == "checkbox"): ?>
-                                <input
+                                <input id="<?=htmlspecialcharsbx($id)?>"
                                     type="checkbox"
                                     name="<?=htmlspecialcharsbx($id)?>"
-                                    id="<?=htmlspecialcharsbx($id)?>"
                                     value="Y" <?=($val == "Y") ? "checked" : ""?>>
                             <? elseif($type == "text"): ?>
-                                <input
+                                <input id="<?=htmlspecialcharsbx($id)?>"
                                     type="text"
                                     size="<?=$arOption['SIZE']?>"
                                     maxlength="255"
                                     value="<?=htmlspecialcharsbx($val)?>"
-                                    name="<?=htmlspecialcharsbx($id)?>"
-                                    id="<?=htmlspecialcharsbx($id)?>">
+                                    name="<?=htmlspecialcharsbx($id)?>">
                             <? elseif($type == "textarea"): ?>
-                                <textarea
+                                <textarea id="<?=htmlspecialcharsbx($id)?>"
                                     rows="<?=$arOption['ROWS']?>"
                                     cols="<?=$arOption['COLS']?>"
-                                    name="<?=htmlspecialcharsbx($id)?>"
-                                    id="<?=htmlspecialcharsbx($id)?>"><?= htmlspecialcharsbx($val)?></textarea>
+                                    name="<?=htmlspecialcharsbx($id)?>">
+                                    <?=htmlspecialcharsbx($val)?></textarea>
                             <? elseif($type == "multiselect"): ?>
-                                <select
+                                <select id="<?=htmlspecialcharsbx($id)?>"
                                     name="<?=htmlspecialcharsbx($id)?>[]"
-                                    id="<?=htmlspecialcharsbx($id)?>"
                                     <?=($arOption['SIZE']) ? "size={$arOption['SIZE']}" : ""?>
                                     multiple>
                                     <?
@@ -221,7 +257,11 @@ if ($RIGHT >= "R"):
                                     else
                                         $arSelectedValues = array();
                                     ?>
-                                    <option <?=(count($arSelectedValues) > 0) ? "" : "selected"?>>(не выбрано)</option>
+                                    <option <?=(count($arSelectedValues) > 0) ? "" : "selected"?>>(все)</option>
+                                    <option
+                                        value="nothing"
+                                        <?=(count($arSelectedValues) == 1 && $arSelectedValues[0] == "nothing") ? "selected" : ""?>>
+                                        (ничего)</option>
                                     <? foreach ($arOption['VALUES'] as $value => $name): ?>
                                         <option
                                             value="<?=$value?>"
@@ -232,6 +272,7 @@ if ($RIGHT >= "R"):
                             <? endif; ?>
                         </td>
                     </tr>
+                    <? endif; ?>
                 <? else: ?>
                     <tr class="heading">
                         <td colspan="2"><?=$arOption?></td>
@@ -239,36 +280,42 @@ if ($RIGHT >= "R"):
                 <? endif; ?>
             <? endforeach; ?>
         <? endif; ?>
-    <? $tabControl->BeginNextTab();?>
-    <? require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/admin/group_rights.php");?>
-    <? $tabControl->Buttons();?>
-    <input <?=($RIGHT < "W") ? "disabled" : ""?>
-        type="submit"
-        name="Update"
-        value="<?=GetMessage("MAIN_SAVE")?>"
-        title="<?=GetMessage("MAIN_OPT_SAVE_TITLE")?>"
-        class="adm-btn-save">
-    <input <?=($RIGHT < "W") ? "disabled" : ""?>
-        type="submit"
-        name="Apply"
-        value="<?=GetMessage("MAIN_OPT_APPLY")?>"
-        title="<?=GetMessage("MAIN_OPT_APPLY_TITLE")?>">
-    <? if(strlen($_REQUEST["back_url_settings"])>0):?>
+
+
+        <!-- Вкладка с правами доступа -->
+        <? $tabControl->BeginNextTab();?>
+        <? require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/admin/group_rights.php");?>
+
+
+        <!-- Отображение кнопок -->
+        <? $tabControl->Buttons();?>
         <input <?=($RIGHT < "W") ? "disabled" : ""?>
-            type="button"
-            name="Cancel"
-            value="<?=GetMessage("MAIN_OPT_CANCEL")?>"
-            title="<?=GetMessage("MAIN_OPT_CANCEL_TITLE")?>"
-            onclick="window.location='<?echo htmlspecialcharsbx(CUtil::addslashes($_REQUEST["back_url_settings"]))?>'">
-        <input type="hidden" name="back_url_settings" value="<?=htmlspecialcharsbx($_REQUEST["back_url_settings"])?>">
-    <? endif; ?>
-    <input
-        type="submit"
-        name="RestoreDefaults"
-        title="<?echo GetMessage("MAIN_HINT_RESTORE_DEFAULTS")?>"
-        OnClick="confirm('<?echo AddSlashes(GetMessage("MAIN_HINT_RESTORE_DEFAULTS_WARNING"))?>')"
-        value="<?echo GetMessage("MAIN_RESTORE_DEFAULTS")?>">
-    <?=bitrix_sessid_post();?>
-    <? $tabControl->End();?>
+            type="submit"
+            name="Update"
+            value="<?=GetMessage("MAIN_SAVE")?>"
+            title="<?=GetMessage("MAIN_OPT_SAVE_TITLE")?>"
+            class="adm-btn-save">
+        <input <?=($RIGHT < "W") ? "disabled" : ""?>
+            type="submit"
+            name="Apply"
+            value="<?=GetMessage("MAIN_OPT_APPLY")?>"
+            title="<?=GetMessage("MAIN_OPT_APPLY_TITLE")?>">
+        <? if(strlen($_REQUEST["back_url_settings"])>0):?>
+            <input <?=($RIGHT < "W") ? "disabled" : ""?>
+                type="button"
+                name="Cancel"
+                value="<?=GetMessage("MAIN_OPT_CANCEL")?>"
+                title="<?=GetMessage("MAIN_OPT_CANCEL_TITLE")?>"
+                onclick="window.location='<?echo htmlspecialcharsbx(CUtil::addslashes($_REQUEST["back_url_settings"]))?>'">
+            <input type="hidden" name="back_url_settings" value="<?=htmlspecialcharsbx($_REQUEST["back_url_settings"])?>">
+        <? endif; ?>
+        <input
+            type="submit"
+            name="RestoreDefaults"
+            title="<?echo GetMessage("MAIN_HINT_RESTORE_DEFAULTS")?>"
+            OnClick="confirm('<?echo AddSlashes(GetMessage("MAIN_HINT_RESTORE_DEFAULTS_WARNING"))?>')"
+            value="<?echo GetMessage("MAIN_RESTORE_DEFAULTS")?>">
+        <?=bitrix_sessid_post();?>
+        <? $tabControl->End();?>
     </form>
 <?endif;?>
