@@ -6,12 +6,14 @@ Loc::loadMessages(__FILE__);
 
 class logger_iblock extends CModule
 {
-    var $MODULE_ID = "logger_iblock";
+    var $MODULE_ID = "logger.iblock";
     var $MODULE_VERSION;
     var $MODULE_VERSION_DATE;
     var $MODULE_NAME;
     var $MODULE_DESCRIPTION;
     var $MODULE_CSS;
+
+    var $PARTNER_NAME = "Kudakov Andrey";
 
     // пути
     var $PATH;
@@ -73,6 +75,13 @@ class logger_iblock extends CModule
             $this->MODULE_ID,
             "EditEvents",
             "onIBlockAfterEditElement"
+        );
+        RegisterModuleDependences(
+            "iblock",
+            "OnAfterIBlockElementSetPropertyValuesEx",
+            $this->MODULE_ID,
+            "EditEvents",
+            "OnIBlockAfterElementSetPropertyValuesEx"
         );
 
 

@@ -1,7 +1,7 @@
 <?php
 
 Bitrix\Main\Loader::registerAutoloadClasses(
-    "logger_iblock",
+    "logger.iblock",
     array(
         "logger_iblock\\HLB" => "lib/HLB.php",
         "logger_iblock\\Options" => "lib/Options.php",
@@ -15,9 +15,9 @@ $arClasses = array(
     'DeleteEvents' => 'classes/DeleteEvents.php',
 );
 
-CModule::AddAutoloadClasses("logger_iblock", $arClasses);
+CModule::AddAutoloadClasses("logger.iblock", $arClasses);
 
 
 
 
-CModule::IncludeModule("logger_iblock");
+CModule::IncludeModule("logger.iblockk");

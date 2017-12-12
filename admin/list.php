@@ -8,12 +8,15 @@
 
 require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_before.php");
 
-CModule::IncludeModule('logger_iblock');
+CModule::IncludeModule('logger.iblock');
 CModule::IncludeModule('highloadblock');
 
 use logger_iblock\Options;
 use Bitrix\Highloadblock\HighloadBlockTable as HLBT;
 use Bitrix\Main\Entity;
+
+
+$APPLICATION->SetTitle('Список записей логирования');
 
 // подключим языковой файл
 IncludeModuleLangFile(__FILE__);
@@ -109,6 +112,8 @@ if (count($filter)) {
     $mainQuery->setFilter($filter);
     $filterIsActive = true;
 }
+
+$mainQuery->setOrder(array('ID' => 'DESC'));
 
 
 // Пагинация

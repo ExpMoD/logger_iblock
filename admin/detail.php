@@ -8,7 +8,7 @@
 
 require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_before.php");
 
-CModule::IncludeModule('logger_iblock');
+CModule::IncludeModule('logger.iblock');
 CModule::IncludeModule('highloadblock');
 
 use logger_iblock\Options;
@@ -17,6 +17,8 @@ use Bitrix\Main\Entity;
 
 // подключим языковой файл
 IncludeModuleLangFile(__FILE__);
+
+$APPLICATION->SetTitle('Лог #' . $_GET['id']);
 
 // получим права доступа текущего пользователя на модуль
 $POST_RIGHT = $APPLICATION->GetGroupRight(Options::module_id);

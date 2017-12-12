@@ -12,7 +12,7 @@ namespace logger_iblock;
 class Options
 {
     const ib = "iblock";
-    const module_id = "logger_iblock";
+    const module_id = "logger.iblock";
     const ses_var = "IBLOCK_LOGGER_ELEMENT";
 
     const ACTION_TYPE_EDIT = "EDIT";

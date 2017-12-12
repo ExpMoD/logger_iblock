@@ -2,7 +2,7 @@
 
 <?
 
-CModule::IncludeModule("logger_iblock");
+CModule::IncludeModule("logger.iblock");
 
 use logger_iblock\Options;
 

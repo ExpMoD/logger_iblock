@@ -131,6 +131,45 @@ class EditEvents
     }
 
 
+    function OnIBlockAfterElementSetPropertyValuesEx($ELEMENT_ID, $IBLOCK_ID, $PROPERTY_VALUES, $FLAGS) {
+
+        $ibActive = Options::getOptionStr(Options::ib . ".ACTIVE." . $IBLOCK_ID);
+        $ibElProps = Options::getOptionStr(Options::ib . ".ELEMENTPROPS." . $IBLOCK_ID);
+        if ($ibActive == 'Y') {
+            if (strlen($ibElProps)) $ibElProps   = explode(';;;', $ibElProps);
+
+            if (!in_array('nothing', $ibElProps)) {
+
+                $changedTemp = array();
+
+                foreach ($PROPERTY_VALUES as $key => $newValue) {
+                    if (substr($key, 0, 1) == '~') continue;
+
+                    if (is_array($newValue))
+                        $newValue = implode('; ', $newValue);
+
+                    if (in_array($key, $ibElProps) || !$ibElProps)
+                        $changedTemp[$key] = $newValue;
+                }
+
+                $changed = array();
+
+                foreach ($changedTemp as $key => $value)
+                    $changed[] = $key . ": " . $value;
+
+
+                if (!! count($changed)) {
+                    \logger_iblock\HLB::add(
+                        Options::ENTITY_TYPE_ELEMENT,
+                        $IBLOCK_ID,
+                        Options::ACTION_TYPE_EDIT,
+                        $changed
+                    );
+                }
+            }
+        }
+    }
+
 
 
     function onIBlockBeforeEditSection(&$arFields)

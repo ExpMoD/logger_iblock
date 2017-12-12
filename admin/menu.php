@@ -8,7 +8,7 @@
 
 IncludeModuleLangFile(__FILE__);
 
-CModule::IncludeModule('logger_iblock');
+CModule::IncludeModule('logger.iblock');
 
 global $APPLICATION;
 $MODULE_ID = \logger_iblock\Options::module_id;
@@ -25,7 +25,7 @@ if ($APPLICATION->GetGroupRight("form") > "D" && \logger_iblock\HLB::isExist()) 
         "title" => GetMessage('HISTORY_OF_CHANGE'),
         "icon" => "form_menu_icon",
         "page_icon" => "form_page_icon",
-        "items_id" => $MODULE_ID . "hoc",
+        "items_id" => "hoc",
         "items" => array(),
     );
 
