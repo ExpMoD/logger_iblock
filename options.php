@@ -2,14 +2,20 @@
 
 <?
 $module_id = "logger_iblock";
+
 IncludeModuleLangFile($_SERVER["DOCUMENT_ROOT"].BX_ROOT."/modules/main/options.php");
 IncludeModuleLangFile(__FILE__);
+
 $RIGHT = $APPLICATION->GetGroupRight($module_id);
+
+
 if ($RIGHT >= "R"):
     $iBlockIncluded = false;
     if (CModule::IncludeModule('iblock'))
         $iBlockIncluded = true;
 
+
+    /*** Создание закладок ***/
     $arTabs = array(
         array(
             "DIV" => "main",
@@ -25,6 +31,8 @@ if ($RIGHT >= "R"):
         ),
     );
 
+
+    /*** Создание закладки инфоблоки ***/
     if ($iBlockIncluded) {
         $iBlocksTab = array(
             array(
@@ -37,10 +45,12 @@ if ($RIGHT >= "R"):
         array_splice($arTabs, 1, 0, $iBlocksTab);
     }
 
+
+    /*** Создание главных настроек***/
     $arMainOptions = array(
         GetMessage("MAIN_OPTIONS"),
         array(
-            "ID" => "ENABLED",
+            "ID" => "main.ENABLED",
             "NAME" => GetMessage("LIB_OPTIONS_ENABLED"),
             "TYPE" => "checkbox",
             "SIZE" => false,
@@ -50,6 +60,8 @@ if ($RIGHT >= "R"):
 
     $arIBlockOptions = array();
 
+
+    /*** Создание настроек инфоблоков ***/
     if ($iBlockIncluded) {
         $arIBlocks = CIBlock::GetList();
 
@@ -138,14 +150,31 @@ if ($RIGHT >= "R"):
 
     CModule::IncludeModule($module_id);
 
+    /*** Сохранение настроек ***/
     if ($REQUEST_METHOD == "POST" && strlen($Update.$Apply.$RestoreDefaults) > 0 && $RIGHT=="W" && check_bitrix_sessid()) {
         require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/perfmon/prolog.php");
 
+        /*** Запись измененных главных свойств модуля ***/
         foreach($arMainOptions as $arOption) {
-            $name = $arOption['ID'];
-            $val = (isset($_REQUEST[$name])) ? $_REQUEST[$name] : "";
+            $id = htmlspecialcharsbx($arOption['ID']);
+            $name = str_replace('.', '_', $id);
+            $value = (isset($_REQUEST[$name])) ? $_REQUEST[$name] : "";
+            COption::SetOptionString($module_id, $id, $value);
+        }
 
-            //COption::SetOptionString($module_id, $name, $val);
+        /*** Запись измененных свойств элемента раздела инфоблоки ***/
+        foreach($arIBlockOptions as $arOption) {
+            $id = htmlspecialcharsbx($arOption['ID']);
+            $name = str_replace('.', '_', $id);
+            $value = $_REQUEST[$name];
+
+            if (is_array($value)) {
+                $value = implode(';;;', $value);
+            } else if (! isset($value)) {
+                $value = "";
+            }
+
+            COption::SetOptionString($module_id, $id, $value);
         }
 
         ob_start();
@@ -156,6 +185,9 @@ if ($RIGHT >= "R"):
 
     ?>
 
+    <?
+    /*** вывод полей настроек ***/
+    ?>
     <form
         method="post"
         action="<?echo $APPLICATION->GetCurPage()?>?mid=<?=urlencode($module_id)?>&amp;lang=<?=LANGUAGE_ID?>">
@@ -164,18 +196,17 @@ if ($RIGHT >= "R"):
 
         <!-- Вкладка с основными настройками -->
         <? $tabControl->BeginNextTab();
-        $tab = "main";
 
         foreach($arMainOptions as $arOption):
             if (is_array($arOption)):
-                $val = COption::GetOptionString($module_id, $arOption['ID'], $arOption['DEFAULT']);
+                $id = $arOption['ID'];
                 $type = $arOption['TYPE'];
-                $id = $tab . "." . $arOption['ID'];
+                $val = COption::GetOptionString($module_id, $arOption['ID'], $arOption['DEFAULT']);
                 ?>
                 <? if ($arOption['ACTIVE']): ?>
                 <tr>
                     <td width="40%" nowrap <?=($type == "textarea") ? 'class="adm-detail-valign-top"' : ""?>>
-                        <label for="<?=htmlspecialcharsbx($id)?>"><?= $arOption['NAME']?>:</label>
+                        <label for="<?=htmlspecialcharsbx($id)?>"><?=$arOption['NAME']?>:</label>
                     </td>
                     <td width="60%">
                         <? if($type == "checkbox"): ?>
@@ -194,8 +225,8 @@ if ($RIGHT >= "R"):
                             <textarea id="<?= htmlspecialcharsbx($id)?>"
                                 rows="<?=$arOption['ROWS']?>"
                                 cols="<?=$arOption['COLS']?>"
-                                name="<?= htmlspecialcharsbx($id)?>">
-                                <?= htmlspecialcharsbx($val)?></textarea>
+                                name="<?=htmlspecialcharsbx($id)?>">
+                                <?=htmlspecialcharsbx($val)?></textarea>
                         <? endif; ?>
                     </td>
                 </tr>
@@ -212,7 +243,6 @@ if ($RIGHT >= "R"):
         <? if ($iBlockIncluded): ?>
             <?
                 $tabControl->BeginNextTab();
-                $arIblocksOptions = array();
             ?>
             <? foreach($arIBlockOptions as $arOption):
                 if (is_array($arOption)): ?>
@@ -223,7 +253,7 @@ if ($RIGHT >= "R"):
                     ?>
 
                     <? if ($arOption['ACTIVE']): ?>
-                    <tr>
+                    <tr <? print_r($val)?>>
                         <td width="40%" nowrap <?=($type == "textarea") ? 'class="adm-detail-valign-top"' : ""?>>
                             <label for="<?=htmlspecialcharsbx($id)?>"><?=$arOption['NAME']?>:</label>
                         </td>
@@ -257,7 +287,7 @@ if ($RIGHT >= "R"):
                                     else
                                         $arSelectedValues = array();
                                     ?>
-                                    <option <?=(count($arSelectedValues) > 0) ? "" : "selected"?>>(все)</option>
+                                    <option value="" <?=(count($arSelectedValues) > 0) ? "" : "selected"?>>(все)</option>
                                     <option
                                         value="nothing"
                                         <?=(count($arSelectedValues) == 1 && $arSelectedValues[0] == "nothing") ? "selected" : ""?>>
